@@ -1,0 +1,1377 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Peppermint Robotics | Fleet Command</title>
+
+    <style>
+      /* =========================================================
+         1. BASE
+      ========================================================= */
+      * {
+        box-sizing: border-box;
+      }
+
+      :root {
+        --bg: #070b13;
+        --panel: #0d1422;
+        --panel2: #111a2b;
+        --line: #1d2a40;
+        --text: #edf3ff;
+        --muted: #73819a;
+        --green: #32e58b;
+        --yellow: #ffc857;
+        --red: #ff526f;
+        --blue: #55a8ff;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: Inter, "Segoe UI", Arial, sans-serif;
+        font-size: 13px;
+      }
+
+      button,
+      input,
+      select {
+        font: inherit;
+      }
+
+      .app {
+        min-height: 100vh;
+        display: flex;
+      }
+
+      /* =========================================================
+         2. SIDEBAR
+      ========================================================= */
+      .sidebar {
+        width: 220px;
+        min-height: 100vh;
+        background: #090f1b;
+        border-right: 1px solid var(--line);
+        padding: 22px 14px;
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+      }
+
+      .logo {
+        padding: 4px 10px 25px;
+        font-size: 15px;
+        font-weight: 800;
+        letter-spacing: 1.2px;
+      }
+
+      .logo span {
+        color: var(--green);
+      }
+
+      .section-title {
+        color: #4e5d75;
+        font-size: 9px;
+        letter-spacing: 1.5px;
+        padding: 15px 11px 8px;
+      }
+
+      .nav {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        padding: 11px;
+        margin: 3px 0;
+        color: #8491a8;
+        border-radius: 8px;
+      }
+
+      .nav.active {
+        color: white;
+        background: #132036;
+        border: 1px solid #203653;
+      }
+
+      .nav .dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #46536a;
+      }
+
+      .nav.active .dot {
+        background: var(--green);
+        box-shadow: 0 0 8px var(--green);
+      }
+
+      .sidebar-bottom {
+        position: absolute;
+        left: 14px;
+        right: 14px;
+        bottom: 20px;
+      }
+
+      .system {
+        border: 1px solid var(--line);
+        border-radius: 9px;
+        padding: 12px;
+        background: #0d1523;
+      }
+
+      .system-row {
+        display: flex;
+        justify-content: space-between;
+        margin: 7px 0;
+        color: var(--muted);
+        font-size: 11px;
+      }
+
+      /* =========================================================
+         3. MAIN LAYOUT + TOPBAR
+      ========================================================= */
+      .main {
+        margin-left: 220px;
+        width: calc(100% - 220px);
+      }
+
+      .topbar {
+        height: 68px;
+        padding: 0 25px;
+        border-bottom: 1px solid var(--line);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #090f1a;
+      }
+
+      .page-title {
+        font-size: 18px;
+        font-weight: 700;
+      }
+
+      .page-sub {
+        color: var(--muted);
+        font-size: 11px;
+        margin-top: 3px;
+      }
+
+      .connection {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border: 1px solid #214a3a;
+        background: #0b1c16;
+        color: var(--green);
+        border-radius: 20px;
+        font-size: 11px;
+      }
+
+      .connection i {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--green);
+        box-shadow: 0 0 9px var(--green);
+      }
+
+      .content {
+        padding: 20px;
+      }
+
+      /* =========================================================
+         4. KPI CARDS
+      ========================================================= */
+      .kpis {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+
+      .kpi {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 15px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .kpi:after {
+        content: "";
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        width: 100%;
+        height: 2px;
+        background: #17263b;
+      }
+
+      .kpi.green:after {
+        background: var(--green);
+      }
+      .kpi.yellow:after {
+        background: var(--yellow);
+      }
+      .kpi.red:after {
+        background: var(--red);
+      }
+      .kpi.blue:after {
+        background: var(--blue);
+      }
+
+      .kpi-label {
+        color: var(--muted);
+        font-size: 9px;
+        letter-spacing: 1px;
+      }
+
+      .kpi-value {
+        font-size: 26px;
+        font-weight: 700;
+        margin-top: 8px;
+      }
+
+      .kpi-meta {
+        color: #53627a;
+        font-size: 10px;
+        margin-top: 5px;
+      }
+
+      /* =========================================================
+         5. TOOLBAR (filters + search)
+      ========================================================= */
+      .toolbar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+
+      .filter {
+        padding: 7px 11px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: #0d1523;
+        color: #7f8ca2;
+        cursor: pointer;
+      }
+
+      .filter.active {
+        color: white;
+        border-color: #315175;
+        background: #152238;
+      }
+
+      .search {
+        margin-left: auto;
+        width: 220px;
+        padding: 8px 11px;
+        background: #0d1523;
+        color: white;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        outline: none;
+      }
+
+      /* =========================================================
+         6. PANELS + GRIDS
+      ========================================================= */
+      .grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.8fr) minmax(260px, 0.7fr);
+        gap: 14px;
+      }
+
+      .lower {
+        display: grid;
+        grid-template-columns: 1.45fr 0.8fr;
+        gap: 14px;
+        margin-top: 14px;
+      }
+
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        overflow: hidden;
+      }
+
+      .panel-head {
+        height: 48px;
+        padding: 0 15px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .panel-title {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.8px;
+      }
+
+      .panel-action {
+        color: var(--muted);
+        font-size: 10px;
+      }
+
+      /* =========================================================
+         7. LIVE MAP
+      ========================================================= */
+      .map-wrap {
+        padding: 12px;
+      }
+
+      .map {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 810 / 340;
+        background: #080e18;
+        border: 1px solid #1a2940;
+        border-radius: 7px;
+        overflow: hidden;
+      }
+
+      .map img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: fill;
+        opacity: 0.78;
+      }
+
+      .grid-overlay {
+        position: absolute;
+        inset: 0;
+        background-image:
+          linear-gradient(rgba(70, 120, 160, 0.07) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(70, 120, 160, 0.07) 1px, transparent 1px);
+        background-size: 40px 40px;
+        pointer-events: none;
+      }
+
+      .robot {
+        position: absolute;
+        width: 13px;
+        height: 13px;
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        background: var(--green);
+        border: 2px solid white;
+        box-shadow: 0 0 14px rgba(50, 229, 139, 0.8);
+        cursor: pointer;
+        z-index: 5;
+        transition:
+          left 0.35s linear,
+          top 0.35s linear;
+      }
+
+      .robot:hover {
+        transform: translate(-50%, -50%) scale(1.5);
+      }
+
+      .robot:after {
+        content: attr(data-id);
+        position: absolute;
+        left: 10px;
+        top: -9px;
+        color: white;
+        font-size: 9px;
+        font-weight: bold;
+        text-shadow: 0 1px 3px black;
+        white-space: nowrap;
+      }
+
+      .robot.warning {
+        background: var(--yellow);
+        box-shadow: 0 0 14px rgba(255, 200, 87, 0.8);
+      }
+
+      .robot.danger {
+        background: var(--red);
+        box-shadow: 0 0 14px rgba(255, 82, 111, 0.9);
+      }
+
+      .robot.idle {
+        background: #55a8ff;
+        box-shadow: 0 0 10px rgba(85, 168, 255, 0.7);
+      }
+
+      .map-legend {
+        display: flex;
+        gap: 15px;
+        padding: 10px 2px 0;
+        color: var(--muted);
+        font-size: 10px;
+      }
+
+      .legend-dot {
+        display: inline-block;
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        margin-right: 5px;
+      }
+
+      /* =========================================================
+         8. ROBOT INSPECTOR
+      ========================================================= */
+      .inspector {
+        padding: 15px;
+      }
+
+      .inspector-empty {
+        color: #59677e;
+      }
+
+      .robot-id {
+        font-size: 25px;
+        font-weight: 800;
+      }
+
+      .robot-type {
+        color: var(--muted);
+        font-size: 10px;
+        margin-top: 2px;
+        text-transform: uppercase;
+      }
+
+      .state {
+        display: inline-block;
+        margin-top: 14px;
+        padding: 5px 9px;
+        border-radius: 5px;
+        background: #0d251b;
+        color: var(--green);
+        font-size: 10px;
+      }
+
+      .details {
+        margin-top: 17px;
+      }
+
+      .detail {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 0;
+        border-bottom: 1px solid var(--line);
+        color: var(--muted);
+        font-size: 11px;
+      }
+
+      .detail strong {
+        color: #e6edf8;
+      }
+
+      .battery-bar {
+        height: 5px;
+        margin-top: 15px;
+        background: #1b2637;
+        border-radius: 5px;
+        overflow: hidden;
+      }
+
+      .battery-fill {
+        height: 100%;
+        width: 0;
+        background: var(--green);
+        transition: width 0.3s;
+      }
+
+      /* =========================================================
+         9. FLEET TABLE
+      ========================================================= */
+      .table-wrap {
+        overflow: auto;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      th {
+        color: #53627a;
+        font-size: 9px;
+        font-weight: 500;
+        text-align: left;
+        padding: 10px 13px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      td {
+        padding: 10px 13px;
+        border-bottom: 1px solid #162236;
+        font-size: 11px;
+      }
+
+      tbody tr {
+        cursor: pointer;
+      }
+
+      tr:hover {
+        background: #111c2e;
+      }
+
+      .robot-name {
+        font-weight: 700;
+      }
+
+      .badge {
+        display: inline-block;
+        padding: 4px 7px;
+        border-radius: 4px;
+        font-size: 9px;
+        background: #122238;
+        color: #72b6ff;
+      }
+
+      .badge.active {
+        color: var(--green);
+        background: #0c241a;
+      }
+
+      /* renamed from ".badge.alert" so it no longer clashes with ".alert" rows */
+      .badge.attention {
+        color: var(--red);
+        background: #2a1018;
+      }
+
+      /* =========================================================
+         10. ATTENTION CENTER
+      ========================================================= */
+      .alert {
+        display: flex;
+        gap: 10px;
+        padding: 11px 14px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .alert-icon {
+        color: var(--yellow);
+      }
+
+      .alert.danger .alert-icon {
+        color: var(--red);
+      }
+
+      .alert-text strong {
+        display: block;
+        font-size: 11px;
+      }
+
+      .alert-text small {
+        color: var(--muted);
+        font-size: 9px;
+      }
+
+      .clear {
+        color: var(--green);
+        padding: 20px;
+        text-align: center;
+        font-size: 11px;
+      }
+
+      /* =========================================================
+         11. BATTERY TREND CHART
+      ========================================================= */
+      .windows {
+        display: flex;
+        gap: 5px;
+      }
+
+      .windows button {
+        background: #080d18;
+        color: #8793ab;
+        border: 1px solid #33415f;
+        padding: 5px 10px;
+        border-radius: 5px;
+        font-size: 10px;
+        cursor: pointer;
+      }
+
+      .windows button.selected {
+        background: var(--green);
+        color: #06120d;
+        border-color: var(--green);
+      }
+
+      .chart-wrapper {
+        position: relative;
+        height: 230px;
+        padding: 12px 14px 4px;
+      }
+
+      .trend-footer {
+        display: flex;
+        justify-content: space-between;
+        padding: 6px 15px 12px;
+        color: #68758e;
+        font-size: 10px;
+      }
+
+      /* =========================================================
+         12. LIVE ACTIVITY
+      ========================================================= */
+      .activity-list {
+        max-height: 255px;
+        overflow: auto;
+      }
+
+      .activity-item {
+        display: flex;
+        gap: 10px;
+        padding: 9px 14px;
+        border-bottom: 1px solid var(--line);
+        font-size: 10px;
+      }
+
+      .activity-dot {
+        width: 6px;
+        height: 6px;
+        margin-top: 3px;
+        border-radius: 50%;
+        background: var(--green);
+        flex: none;
+      }
+
+      .activity-time {
+        color: #506078;
+        margin-left: auto;
+        white-space: nowrap;
+      }
+
+      /* =========================================================
+         13. RESPONSIVE
+      ========================================================= */
+      @media (max-width: 1100px) {
+        .sidebar {
+          width: 180px;
+        }
+        .main {
+          margin-left: 180px;
+          width: calc(100% - 180px);
+        }
+        .kpis {
+          grid-template-columns: repeat(3, 1fr);
+        }
+      }
+
+      @media (max-width: 800px) {
+        .sidebar {
+          display: none;
+        }
+
+        .main {
+          margin-left: 0;
+          width: 100%;
+        }
+
+        .kpis {
+          grid-template-columns: repeat(2, 1fr);
+        }
+
+        .grid,
+        .lower {
+          grid-template-columns: 1fr;
+        }
+
+        .search {
+          width: 140px;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="app">
+      <!-- ================= SIDEBAR ================= -->
+      <aside class="sidebar">
+        <div class="logo">PEPPERMINT <span>●</span></div>
+
+        <div class="section-title">OPERATIONS</div>
+        <div class="nav active"><span class="dot"></span>Overview</div>
+        <div class="nav"><span class="dot"></span>Fleet Monitor</div>
+        <div class="nav"><span class="dot"></span>Missions</div>
+
+        <div class="section-title">INTELLIGENCE</div>
+        <div class="nav"><span class="dot"></span>Analytics</div>
+        <div class="nav"><span class="dot"></span>Alerts</div>
+
+        <div class="section-title">SYSTEM</div>
+        <div class="nav"><span class="dot"></span>Settings</div>
+
+        <div class="sidebar-bottom">
+          <div class="system">
+            <div class="system-row">
+              <span>BACKEND</span>
+              <strong style="color: #32e58b">ONLINE</strong>
+            </div>
+            <div class="system-row">
+              <span>WEBSOCKET</span>
+              <strong id="sideWs">LIVE</strong>
+            </div>
+            <div class="system-row">
+              <span>VERSION</span>
+              <strong>1.0</strong>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- ================= MAIN ================= -->
+      <section class="main">
+        <header class="topbar">
+          <div>
+            <div class="page-title">Fleet Operations Center</div>
+            <div class="page-sub">Real-time autonomous robot monitoring</div>
+          </div>
+
+          <div class="connection" id="connection">
+            <i></i>
+            <span>CONNECTING</span>
+          </div>
+        </header>
+
+        <main class="content">
+          <!-- KPI CARDS -->
+          <section class="kpis">
+            <div class="kpi green">
+              <div class="kpi-label">FLEET SIZE</div>
+              <div class="kpi-value" id="total">0</div>
+              <div class="kpi-meta">Registered robots</div>
+            </div>
+
+            <div class="kpi blue">
+              <div class="kpi-label">ACTIVE MISSIONS</div>
+              <div class="kpi-value" id="active">0</div>
+              <div class="kpi-meta">Active / on mission</div>
+            </div>
+
+            <div class="kpi green">
+              <div class="kpi-label">AVG BATTERY</div>
+              <div class="kpi-value" id="battery">0%</div>
+              <div class="kpi-meta">Fleet health</div>
+            </div>
+
+            <div class="kpi yellow">
+              <div class="kpi-label">CHARGING</div>
+              <div class="kpi-value" id="charging">0</div>
+              <div class="kpi-meta">Power stations</div>
+            </div>
+
+            <div class="kpi red">
+              <div class="kpi-label">ATTENTION</div>
+              <div class="kpi-value" id="attention">0</div>
+              <div class="kpi-meta">Alerts requiring action</div>
+            </div>
+          </section>
+
+          <!-- FILTER BAR -->
+          <div class="toolbar">
+            <button class="filter active" data-filter="all">ALL</button>
+            <button class="filter" data-filter="active">ACTIVE</button>
+            <button class="filter" data-filter="idle">IDLE</button>
+            <button class="filter" data-filter="charging">CHARGING</button>
+            <button class="filter" data-filter="alert">ALERTS</button>
+            <input class="search" id="search" placeholder="Search robot..." />
+          </div>
+
+          <!-- MAP + INSPECTOR -->
+          <section class="grid">
+            <div class="panel">
+              <div class="panel-head">
+                <span class="panel-title">LIVE SITE MAP</span>
+                <span class="panel-action">X: 0–810 &nbsp; Y: 0–340</span>
+              </div>
+
+              <div class="map-wrap">
+                <div class="map" id="map">
+                  <img src="/static/images/layout.png" alt="Warehouse Layout" />
+                  <div class="grid-overlay"></div>
+                </div>
+
+                <div class="map-legend">
+                  <span><i class="legend-dot" style="background: #32e58b"></i>Active</span>
+                  <span><i class="legend-dot" style="background: #55a8ff"></i>Idle</span>
+                  <span><i class="legend-dot" style="background: #ffc857"></i>Charging</span>
+                  <span><i class="legend-dot" style="background: #ff526f"></i>Attention</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-head">
+                <span class="panel-title">ROBOT INSPECTOR</span>
+              </div>
+
+              <div class="inspector" id="inspector">
+                <div class="inspector-empty">
+                  Select a robot from the map or fleet table.
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- FLEET TABLE + ALERTS -->
+          <section class="lower">
+            <div class="panel">
+              <div class="panel-head">
+                <span class="panel-title">FLEET STATUS</span>
+                <span class="panel-action" id="fleetCount">0 robots</span>
+              </div>
+
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>ROBOT</th>
+                      <th>TYPE</th>
+                      <th>STATUS</th>
+                      <th>BATTERY</th>
+                      <th>POSITION</th>
+                    </tr>
+                  </thead>
+                  <tbody id="fleetTable"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-head">
+                <span class="panel-title">ATTENTION CENTER</span>
+                <span class="panel-action" id="alertCount">0 alerts</span>
+              </div>
+
+              <div id="alerts"></div>
+            </div>
+          </section>
+
+          <!-- BATTERY TREND + ACTIVITY -->
+          <section class="lower">
+            <div class="panel">
+              <div class="panel-head">
+                <span class="panel-title">AVERAGE BATTERY TREND</span>
+
+                <div class="windows">
+                  <button data-window="1m">1M</button>
+                  <button data-window="5m" class="selected">5M</button>
+                  <button data-window="15m">15M</button>
+                  <button data-window="1h">1H</button>
+                </div>
+              </div>
+
+              <div class="chart-wrapper">
+                <canvas id="batteryChart"></canvas>
+              </div>
+
+              <div class="trend-footer">
+                <span>● LIVE DATABASE TELEMETRY</span>
+                <span id="trendUpdated">Loading...</span>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-head">
+                <span class="panel-title">LIVE ACTIVITY</span>
+                <span class="panel-action">STREAM</span>
+              </div>
+
+              <div class="activity-list" id="activity"></div>
+            </div>
+          </section>
+        </main>
+      </section>
+    </div>
+
+    <!-- ================= SCRIPTS ================= -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+      /* =========================================================
+         1. STATE
+      ========================================================= */
+      const robots = {};
+      let selectedRobot = null;
+      let currentFilter = "all";
+      let socket = null;
+      let batteryChart = null;
+      let currentWindow = "5m";
+
+      /* Site size (1 pixel = 1 unit) */
+      const SITE_WIDTH = 810;
+      const SITE_HEIGHT = 340;
+
+      /* =========================================================
+         2. ELEMENTS
+      ========================================================= */
+      const mapEl = document.getElementById("map");
+      const totalEl = document.getElementById("total");
+      const activeEl = document.getElementById("active");
+      const batteryEl = document.getElementById("battery");
+      const chargingEl = document.getElementById("charging");
+      const attentionEl = document.getElementById("attention");
+      const connectionEl = document.getElementById("connection");
+      const sideWs = document.getElementById("sideWs");
+      const tableEl = document.getElementById("fleetTable");
+      const alertsEl = document.getElementById("alerts");
+      const activityEl = document.getElementById("activity");
+      const searchEl = document.getElementById("search");
+      const inspectorEl = document.getElementById("inspector");
+      const fleetCountEl = document.getElementById("fleetCount");
+      const alertCountEl = document.getElementById("alertCount");
+      const trendUpdatedEl = document.getElementById("trendUpdated");
+
+      /* =========================================================
+         3. HELPERS
+      ========================================================= */
+      function escapeHtml(value) {
+        return String(value)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#39;");
+      }
+
+      function prettyStatus(status) {
+        return String(status).replaceAll("_", " ");
+      }
+
+      function formatTime(value) {
+        if (!value) return "Live";
+        return new Date(value).toLocaleTimeString();
+      }
+
+      function isRunning(robot) {
+        return robot.status === "active" || robot.status === "on_mission";
+      }
+
+      function isAttention(robot) {
+        return (
+          robot.status === "error" ||
+          robot.status === "blocked" ||
+          robot.status === "maintenance" ||
+          robot.status === "offline" ||
+          Number(robot.battery) < 30
+        );
+      }
+
+      /* =========================================================
+         4. RENDER: MAP MARKERS
+      ========================================================= */
+      function updateMarker(robot) {
+        let marker = document.getElementById("marker-" + robot.robot_id);
+
+        if (!marker) {
+          marker = document.createElement("div");
+          marker.id = "marker-" + robot.robot_id;
+          marker.dataset.id = robot.robot_id;
+          marker.addEventListener("click", () => selectRobot(robot.robot_id));
+          mapEl.appendChild(marker);
+        }
+
+        marker.style.left = (robot.x / SITE_WIDTH) * 100 + "%";
+        marker.style.top = (robot.y / SITE_HEIGHT) * 100 + "%";
+
+        marker.className = "robot";
+
+        if (
+          robot.status === "error" ||
+          robot.status === "blocked" ||
+          robot.status === "maintenance" ||
+          robot.status === "offline"
+        ) {
+          marker.classList.add("danger");
+        } else if (robot.status === "charging") {
+          marker.classList.add("warning");
+        } else if (robot.status === "idle") {
+          marker.classList.add("idle");
+        }
+      }
+
+      /* =========================================================
+         5. RENDER: DASHBOARD (KPIs)
+      ========================================================= */
+      function updateDashboard() {
+        const list = Object.values(robots);
+
+        totalEl.textContent = list.length;
+        activeEl.textContent = list.filter(isRunning).length;
+        chargingEl.textContent = list.filter(
+          (r) => r.status === "charging",
+        ).length;
+
+        const avg = list.length
+          ? list.reduce((sum, r) => sum + Number(r.battery || 0), 0) /
+            list.length
+          : 0;
+
+        batteryEl.textContent = avg.toFixed(1) + "%";
+        attentionEl.textContent = list.filter(isAttention).length;
+        fleetCountEl.textContent = list.length + " robots";
+
+        renderTable();
+        renderAlerts();
+      }
+
+      /* =========================================================
+         6. RENDER: INSPECTOR
+      ========================================================= */
+      function selectRobot(id) {
+        selectedRobot = id;
+        renderInspector(robots[id]);
+      }
+
+      function renderInspector(robot) {
+        if (!robot) return;
+
+        const battery = Number(robot.battery || 0);
+        const barColor =
+          battery < 30 ? "#ff526f" : battery < 60 ? "#ffc857" : "#32e58b";
+
+        inspectorEl.innerHTML = `
+          <div class="robot-id">${escapeHtml(robot.robot_id)}</div>
+          <div class="robot-type">${escapeHtml(robot.robot_type)}</div>
+          <div class="state">● ${escapeHtml(prettyStatus(robot.status).toUpperCase())}</div>
+
+          <div class="battery-bar">
+            <div class="battery-fill"
+                 style="width:${battery}%; background:${barColor};"></div>
+          </div>
+
+          <div class="details">
+            <div class="detail">
+              <span>Battery</span>
+              <strong>${battery.toFixed(1)}%</strong>
+            </div>
+            <div class="detail">
+              <span>Position</span>
+              <strong>${Number(robot.x).toFixed(1)}, ${Number(robot.y).toFixed(1)}</strong>
+            </div>
+            <div class="detail">
+              <span>Robot type</span>
+              <strong>${escapeHtml(robot.robot_type)}</strong>
+            </div>
+            <div class="detail">
+              <span>Last update</span>
+              <strong>${formatTime(robot.last_seen)}</strong>
+            </div>
+          </div>
+        `;
+      }
+
+      /* =========================================================
+         7. RENDER: FLEET TABLE
+      ========================================================= */
+      function renderTable() {
+        const query = searchEl.value.toLowerCase();
+
+        const list = Object.values(robots).filter((robot) => {
+          const matchesSearch =
+            robot.robot_id.toLowerCase().includes(query) ||
+            robot.robot_type.toLowerCase().includes(query);
+
+          if (!matchesSearch) return false;
+
+          switch (currentFilter) {
+            case "active":
+              return isRunning(robot);
+            case "idle":
+              return robot.status === "idle";
+            case "charging":
+              return robot.status === "charging";
+            case "alert":
+              return isAttention(robot);
+            default:
+              return true;
+          }
+        });
+
+        tableEl.innerHTML = list
+          .map((robot) => {
+            const badgeClass = isAttention(robot)
+              ? "attention"
+              : isRunning(robot)
+                ? "active"
+                : "";
+
+            return `
+              <tr data-id="${escapeHtml(robot.robot_id)}">
+                <td><span class="robot-name">${escapeHtml(robot.robot_id)}</span></td>
+                <td>${escapeHtml(robot.robot_type)}</td>
+                <td><span class="badge ${badgeClass}">${escapeHtml(prettyStatus(robot.status))}</span></td>
+                <td>${Number(robot.battery).toFixed(1)}%</td>
+                <td>${Number(robot.x).toFixed(0)}, ${Number(robot.y).toFixed(0)}</td>
+              </tr>
+            `;
+          })
+          .join("");
+      }
+
+      /* =========================================================
+         8. RENDER: ALERTS
+      ========================================================= */
+      function renderAlerts() {
+        const list = Object.values(robots).filter(isAttention);
+
+        alertCountEl.textContent = list.length + " alerts";
+
+        if (!list.length) {
+          alertsEl.innerHTML = `<div class="clear">✓ Fleet operating normally</div>`;
+          return;
+        }
+
+        alertsEl.innerHTML = list
+          .map((robot) => {
+            const battery = Number(robot.battery);
+            let message = prettyStatus(robot.status);
+
+            if (battery < 30) message = "Battery below 30%";
+
+            return `
+              <div class="alert ${robot.status === "error" ? "danger" : ""}">
+                <div class="alert-icon">⚠</div>
+                <div class="alert-text">
+                  <strong>${escapeHtml(robot.robot_id)} — ${escapeHtml(message)}</strong>
+                  <small>Battery ${battery.toFixed(1)}%</small>
+                </div>
+              </div>
+            `;
+          })
+          .join("");
+      }
+
+      /* =========================================================
+         9. RENDER: ACTIVITY FEED
+      ========================================================= */
+      function addActivity(robot) {
+        const item = document.createElement("div");
+        item.className = "activity-item";
+
+        item.innerHTML = `
+          <span class="activity-dot"></span>
+          <span>
+            <strong>${escapeHtml(robot.robot_id)}</strong>
+            → ${escapeHtml(prettyStatus(robot.status))}
+          </span>
+          <span class="activity-time">${new Date().toLocaleTimeString()}</span>
+        `;
+
+        activityEl.prepend(item);
+
+        while (activityEl.children.length > 12) {
+          activityEl.removeChild(activityEl.lastChild);
+        }
+      }
+
+      /* =========================================================
+         10. ROBOT UPDATE (single entry point)
+      ========================================================= */
+      function updateRobot(robot) {
+        robots[robot.robot_id] = robot;
+
+        updateMarker(robot);
+        updateDashboard();
+        addActivity(robot);
+
+        if (selectedRobot === robot.robot_id) {
+          renderInspector(robot);
+        }
+      }
+
+      /* =========================================================
+         11. BATTERY TREND CHART (Chart.js)
+      ========================================================= */
+      async function loadBatteryTrend(windowName = currentWindow) {
+        currentWindow = windowName;
+
+        try {
+          const response = await fetch(
+            `/api/robots/history/?window=${windowName}`,
+          );
+
+          if (!response.ok) throw new Error("Failed to load history");
+
+          const data = await response.json();
+
+          const labels = data.points.map((point) =>
+            new Date(point.time * 1000).toLocaleTimeString(),
+          );
+          const values = data.points.map((point) => point.battery);
+
+          /* Update the existing chart instead of rebuilding it */
+          if (batteryChart) {
+            batteryChart.data.labels = labels;
+            batteryChart.data.datasets[0].data = values;
+            batteryChart.update("none");
+          } else {
+            createBatteryChart(labels, values);
+          }
+
+          trendUpdatedEl.textContent = `Updated ${new Date().toLocaleTimeString()}`;
+        } catch (error) {
+          console.error("Battery trend error:", error);
+          trendUpdatedEl.textContent = "Unable to load telemetry";
+        }
+      }
+
+      function createBatteryChart(labels, values) {
+        const ctx = document.getElementById("batteryChart");
+
+        Chart.defaults.color = "#73819a";
+        Chart.defaults.borderColor = "#1d2a40";
+
+        batteryChart = new Chart(ctx, {
+          type: "line",
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: "Average Battery %",
+                data: values,
+                tension: 0.35,
+                borderWidth: 2,
+                borderColor: "#32e58b",
+                backgroundColor: "rgba(50, 229, 139, 0.12)",
+                pointRadius: 0,
+                fill: true,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { intersect: false, mode: "index" },
+            scales: {
+              y: {
+                min: 0,
+                max: 100,
+                ticks: { callback: (value) => value + "%" },
+              },
+              x: {
+                ticks: { maxTicksLimit: 8 },
+              },
+            },
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label: (context) => `${context.parsed.y.toFixed(1)}%`,
+                },
+              },
+            },
+          },
+        });
+      }
+
+      /* =========================================================
+         12. API + WEBSOCKET
+      ========================================================= */
+      async function loadFleet() {
+        try {
+          const response = await fetch("/api/robots/");
+
+          if (!response.ok) throw new Error("Fleet API failed");
+
+          const data = await response.json();
+          data.robots.forEach(updateRobot);
+        } catch (error) {
+          console.error("Fleet API:", error);
+        }
+      }
+
+      function connectWebSocket() {
+        const protocol = location.protocol === "https:" ? "wss:" : "ws:";
+
+        socket = new WebSocket(`${protocol}//${location.host}/ws/robots/`);
+
+        socket.onopen = () => {
+          connectionEl.innerHTML = "<i></i><span>LIVE</span>";
+          sideWs.textContent = "LIVE";
+          sideWs.style.color = "#32e58b";
+        };
+
+        socket.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+
+            if (data.type === "robot_update") {
+              updateRobot(data.robot);
+            }
+          } catch (error) {
+            console.error("WebSocket message:", error);
+          }
+        };
+
+        socket.onerror = (error) => {
+          console.error("WebSocket:", error);
+        };
+
+        socket.onclose = () => {
+          connectionEl.innerHTML =
+            "<i style='background:#ff526f'></i><span>RECONNECTING</span>";
+          sideWs.textContent = "RECONNECTING";
+          sideWs.style.color = "#ffc857";
+
+          setTimeout(connectWebSocket, 2000);
+        };
+      }
+
+      /* =========================================================
+         13. EVENT LISTENERS
+      ========================================================= */
+
+      /* Status filters */
+      document.querySelectorAll(".filter").forEach((button) => {
+        button.addEventListener("click", () => {
+          document
+            .querySelectorAll(".filter")
+            .forEach((b) => b.classList.remove("active"));
+
+          button.classList.add("active");
+          currentFilter = button.dataset.filter;
+          renderTable();
+        });
+      });
+
+      /* Search box */
+      searchEl.addEventListener("input", renderTable);
+
+      /* Table row click (event delegation) */
+      tableEl.addEventListener("click", (event) => {
+        const row = event.target.closest("tr[data-id]");
+        if (row) selectRobot(row.dataset.id);
+      });
+
+      /* Chart time-window buttons */
+      document.querySelectorAll(".windows button").forEach((button) => {
+        button.addEventListener("click", () => {
+          document
+            .querySelectorAll(".windows button")
+            .forEach((btn) => btn.classList.remove("selected"));
+
+          button.classList.add("selected");
+          loadBatteryTrend(button.dataset.window);
+        });
+      });
+
+      /* =========================================================
+         14. START
+      ========================================================= */
+      loadFleet();
+      connectWebSocket();
+      loadBatteryTrend("5m");
+
+      setInterval(() => {
+        loadBatteryTrend(currentWindow);
+      }, 10000);
+    </script>
+  </body>
+</html>
