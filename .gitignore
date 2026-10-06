@@ -4,3 +4,8 @@ __pycache__/
 db.sqlite3
 venv/
 .venv/
+
+db.sqlite3-journal
+*.sqlite3-journal
+*.sqlite3-wal
+*.sqlite3-shm
