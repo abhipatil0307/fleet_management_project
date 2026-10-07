@@ -157,6 +157,24 @@
         margin-top: 3px;
       }
 
+      .backend-offline {
+        display: none;
+        position: fixed;
+        top: 12px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1000;
+        padding: 9px 16px;
+        border: 1px solid #7a2435;
+        border-radius: 6px;
+        background: #2a1018;
+        color: #ff526f;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
+      }
+
       .connection {
         display: flex;
         align-items: center;
@@ -728,6 +746,9 @@
       <!-- ================= MAIN ================= -->
       <section class="main">
         <header class="topbar">
+          <div id="backendOffline" class="backend-offline" role="alert" aria-live="assertive">
+            ⚠ BACKEND OFFLINE — attempting to reconnect
+          </div>
           <div>
             <div class="page-title">Fleet Operations Center</div>
             <div class="page-sub">Real-time autonomous robot monitoring</div>
@@ -927,6 +948,26 @@
       const fleetCountEl = document.getElementById("fleetCount");
       const alertCountEl = document.getElementById("alertCount");
       const trendUpdatedEl = document.getElementById("trendUpdated");
+      const backendOfflineEl = document.getElementById("backendOffline");
+
+      let apiOnline = false;
+      let websocketOnline = false;
+
+      function updateBackendStatus() {
+        const online = apiOnline && websocketOnline;
+        backendOfflineEl.style.display = online ? "none" : "block";
+
+        if (online) {
+          connectionEl.innerHTML = "<i></i><span>LIVE</span>";
+          sideWs.textContent = "LIVE";
+          sideWs.style.color = "#32e58b";
+        } else {
+          connectionEl.innerHTML =
+            "<i style='background:#ff526f'></i><span>OFFLINE</span>";
+          sideWs.textContent = websocketOnline ? "LIVE" : "OFFLINE";
+          sideWs.style.color = websocketOnline ? "#32e58b" : "#ff526f";
+        }
+      }
 
       /* =========================================================
          3. HELPERS
@@ -1276,14 +1317,21 @@
       ========================================================= */
       async function loadFleet() {
         try {
-          const response = await fetch("/api/robots/");
-
-          if (!response.ok) throw new Error("Fleet API failed");
+          const response = await fetch("/api/robots/", { cache: "no-store" });
+          if (!response.ok) throw new Error(`Fleet API failed: ${response.status}`);
 
           const data = await response.json();
+          if (!data || !Array.isArray(data.robots)) {
+            throw new Error("Fleet API returned an invalid response");
+          }
+
           data.robots.forEach(updateRobot);
+          apiOnline = true;
         } catch (error) {
           console.error("Fleet API:", error);
+          apiOnline = false;
+        } finally {
+          updateBackendStatus();
         }
       }
 
@@ -1293,9 +1341,8 @@
         socket = new WebSocket(`${protocol}//${location.host}/ws/robots/`);
 
         socket.onopen = () => {
-          connectionEl.innerHTML = "<i></i><span>LIVE</span>";
-          sideWs.textContent = "LIVE";
-          sideWs.style.color = "#32e58b";
+          websocketOnline = true;
+          updateBackendStatus();
         };
 
         socket.onmessage = (event) => {
@@ -1312,14 +1359,15 @@
 
         socket.onerror = (error) => {
           console.error("WebSocket:", error);
+          websocketOnline = false;
+          updateBackendStatus();
         };
 
         socket.onclose = () => {
+          websocketOnline = false;
+          updateBackendStatus();
           connectionEl.innerHTML =
             "<i style='background:#ff526f'></i><span>RECONNECTING</span>";
-          sideWs.textContent = "RECONNECTING";
-          sideWs.style.color = "#ffc857";
-
           setTimeout(connectWebSocket, 2000);
         };
       }
@@ -1368,6 +1416,9 @@
       loadFleet();
       connectWebSocket();
       loadBatteryTrend("5m");
+
+      // Recheck REST API availability so an API outage is detected after startup too.
+      setInterval(loadFleet, 10000);
 
       setInterval(() => {
         loadBatteryTrend(currentWindow);
